@@ -1,0 +1,378 @@
+Q1. Store raw data into hdfs location
+
+Ans: hadoop fs -mkdir  /user/hive/assignment (folder created)
+     hadoop fs -put sales_order_data.csv /user/hive/assignment  (file copy from local to hdfs)
+
+
+Q2. Create a internal hive table "sales_order_csv" which will store csv data sales_order_csv .. make sure to skip header row while creating table
+
+Ans: create table sales_order
+    > (
+    > ORDERNUMBER int,
+    > QUANTITYORDERED int,
+    > PRICEEACH float,
+    > ORDERLINENUMBER int,
+    > SALES float,
+    > STATUS string,
+    > QTR_ID int,
+    > MONTH_ID int,
+    > YEAR_ID int,
+    > PRODUCTLINE string,
+    > MSRP int,
+    > PRODUCTCODE string,
+    > PHONE string,
+    > CITY string,
+    > STATE string,
+    > POSTALCODE string,
+    > COUNTRY string,
+    > TERRITORY string,
+    > CONTACTLASTNAME string,
+    > CONTACTFIRSTNAME string,
+    > DEALSIZE string
+    > )
+    > row format delimited
+    > fields terminated by ','
+    > tblproperties("skip.header.line.count"="1")
+    > ; 
+
+
+Q3  Load data from hdfs path into "sales_order_csv" 
+
+Ans: load data inpath '/user/hive/assignment/sales_order.csv' into table sales_order ;
+
+
+
+Q4 Create an internal hive table which will store data in ORC format "sales_order_orc"
+
+Ans: create table sales_order_orc
+    > (
+    > ORDERNUMBER int,
+    > QUANTITYORDERED int,
+    > PRICEEACH float,
+    > ORDERLINENUMBER int,
+    > SALES float,
+    > STATUS string,
+    > QTR_ID int,
+    > MONTH_ID int,
+    > YEAR_ID int,
+    > PRODUCTLINE string,
+    > MSRP int,
+    > PRODUCTCODE string,
+    > PHONE string,
+    > CITY string,
+    > STATE string,
+    > POSTALCODE string,
+    > COUNTRY string,
+    > TERRITORY string,
+    > CONTACTLASTNAME string,
+    > CONTACTFIRSTNAME string,
+    > DEALSIZE string
+    > )
+    > stored as orc;
+
+
+Q5 Load data from "sales_order_csv" into "sales_order_orc"
+
+Ans: insert overwrite table sales_order_data_orc select * from sales_order ;
+
+
+Perform below menioned queries on "sales_order_orc" table :
+
+
+Qa. Calculate total sales per year
+
+Ans:  select year_id , round(sum(sales),2) as sum_sales from sales_order_orc group by year_id order by year_id ;
+
+  output
+------------------------------------------------------------
+year_id  sum_sales
+2003    3516979.55
+2004    4724162.59
+2005    1791486.71
+--------------------------------------------------------------
+
+
+Qb. Find a product for which maximum orders were placed
+
+Ans: select productline , sum(quantityordered) as quantity from sales_order_orc group by productline order by quantity desc limit 1 ;
+
+output
+------------------------------------------------------------
+productline     quantity
+Classic Cars    33992
+--------------------------------------------------------------
+
+
+
+Qc. Calculate the total sales for each quarter
+
+Ans: select qtr_id, round(sum(sales),2) as sum_sales from sales_order_orc group by qtr_id order by qtr_id ;
+
+output
+------------------------------------------------------------
+qtr_id  sum_sales
+1       2350817.73
+2       2048120.3
+3       1758910.81
+4       3874780.01
+--------------------------------------------------------------
+
+
+
+Qd. In which quarter sales was minimum
+
+Ans:  select qtr_id, round(sum(sales),2) as sum_sales from sales_order_orc group by qtr_id order by sum_sales asc limit 1 ; 
+
+output
+------------------------------------------------------------
+qtr_id  sum_sales
+3       1758910.81
+--------------------------------------------------------------
+
+
+Qe. In which country sales was maximum and in which country sales was minimum
+
+Ans: select country , round(sum(sales),2) as sales from sales_order_orc group by country order by sales desc limit 1  ;
+
+output
+------------------------------------------------------------
+country sales
+USA     3627982.83
+--------------------------------------------------------------
+
+select country , round(sum(sales),2) as sales from sales_order_orc group by country order by sales asc limit 1  ;
+
+output
+------------------------------------------------------------
+country sales
+Ireland 57756.43
+--------------------------------------------------------------
+
+
+Qf. Calculate quartelry sales for each city
+
+Ans: select qtr_id , city ,round(sum(sales),2) as sales from sales_order_orc group by qtr_id,city ;
+
+output
+------------------------------------------------------------
+qtr_id  city sales
+1       Bergamo 56181.32
+1       Boras   31606.72
+1       Brickhaven      31474.78
+1       Brisbane        16118.48
+1       Bruxelles       18800.09
+1       Burbank 37850.08
+1       Burlingame      13529.57
+1       Cambridge       21782.7
+1       Charleroi       16628.16
+1       Cowes   26906.68
+1       Dublin  38784.47
+1       Espoo   51373.49
+1       Frankfurt       48698.83
+1       Gensve  50432.55
+1       Glendale        3987.2
+1       Graz    8775.16
+1       Helsinki        26422.82
+1       Kobenhavn       58871.11
+1       Lille   20178.13
+1       London  8477.22
+1       Los Angeles     23889.32
+1       Lule    9749.0
+1       Lyon    101339.14
+1       Madrid  357668.49
+1       Makati City     55245.02
+1       Manchester      51017.92
+1       Marseille       2317.44
+1       Melbourne       49637.57
+1       Minato-ku       38191.39
+1       NYC     32647.81
+1       Nantes  59617.4
+1       Nashua  12133.25
+1       New Bedford     48578.96
+1       Newark  8722.12
+1       North Sydney    65012.42
+1       Osaka   50490.64
+1       Oulu    49055.4
+1       Paris   71494.18
+1       Pasadena        44273.36
+1       Philadelphia    27398.82
+1       Reims   52029.07
+1       San Diego       87489.23
+1       San Francisco   72899.2
+1       San Rafael      267315.26
+1       Singapore       28395.19
+1       South Brisbane  21730.03
+1       Stavern 54702.0
+1       Toulouse        15139.12
+1       Versailles      5759.42
+2       Allentown       6166.8
+2       Barcelona       4219.2
+2       Boston  74994.24
+2       Brickhaven      7277.35
+2       Bridgewater     75778.99
+2       Bruxelles       8411.95
+2       Cambridge       14380.92
+2       Charleroi       1711.26
+2       Chatswood       43971.43
+2       Espoo   31018.23
+2       Glen Waverly    14378.09
+2       Glendale        20350.95
+2       Kobenhavn       62091.88
+2       Las Vegas       33847.62
+2       Liverpool       91211.06
+2       London  32376.29
+2       Madrid  339588.05
+2       Marseille       52481.84
+2       Melbourne       60135.84
+2       Minato-ku       26482.7
+2       Montreal        58257.5
+2       NYC     165100.34
+2       Nantes  60344.99
+2       New Haven       36973.31
+2       Newark  74506.07
+2       Osaka   17114.43
+2       Oulu    17813.4
+2       Paris   80215.42
+2       Philadelphia    7287.24
+2       Reggio Emilia   41509.94
+2       Reims   18971.96
+2       Salzburg        98104.24
+2       San Jose        160010.27
+2       San Rafael      7261.75
+2       Singapore       92033.77
+2       Strasbourg      80438.48
+2       Tsawassen       31302.5
+3       Allentown       71930.61
+3       Bergen  16363.1
+3       Boras   53941.69
+3       Boston  15344.64
+3       Brickhaven      114974.54
+3       Brisbane        34100.03
+3       Bruxelles       47760.48
+3       Burlingame      42031.83
+3       Cambridge       48828.72
+3       Charleroi       1637.2
+3       Chatswood       69694.4
+3       Dublin  18971.96
+3       Espoo   31569.43
+3       Gensve  67281.01
+3       Glen Waverly    12334.82
+3       Glendale        7600.12
+3       Helsinki        42744.06
+3       Las Vegas       34453.85
+3       Madrid  69714.09
+3       Munich  34993.92
+3       NYC     63027.92
+3       Nantes  61310.88
+3       New Bedford     45738.39
+3       North Sydney    47191.76
+3       Oslo    34145.47
+3       Oulu    37501.58
+3       Paris   27798.48
+3       Pasadena        55776.12
+3       Reggio Emilia   56421.65
+3       Reims   15146.32
+3       Salzburg        6693.28
+3       San Rafael      216297.4
+3       Singapore       90250.08
+3       South Brisbane  10640.29
+3       Torino  94117.26
+3       Toulouse        17251.08
+3       Tsawassen       43332.35
+4       Aaarhus 100595.55
+4       Allentown       44040.73
+4       Barcelona       74192.66
+4       Bergamo 81774.4
+4       Bergen  95277.18
+4       Boras   48710.92
+4       Boston  63730.78
+4       Brickhaven      11528.53
+4       Bridgewater     26115.8
+4       Burbank 8234.56
+4       Burlingame      65221.67
+4       Cambridge       54251.66
+4       Charleroi       13463.48
+4       Chatswood       37905.15
+4       Cowes   51334.16
+4       Frankfurt       36472.76
+4       Glen Waverly    37878.55
+4       Glendale        34485.5
+4       Graz    43488.74
+4       Helsinki        42083.5
+4       Kobenhavn       24078.61
+4       Koln    100306.58
+4       Las Vegas       14449.61
+4       Lille   48874.28
+4       Liverpool       26797.21
+4       London  83970.03
+4       Los Angeles     24159.14
+4       Lule    66005.88
+4       Lyon    41535.11
+4       Madrid  315580.81
+4       Makati City     38770.71
+4       Manchester      106789.89
+4       Marseille       20136.86
+4       Melbourne       91222.0
+4       Minato-ku       55888.65
+4       Montreal        15947.29
+4       NYC     300011.7
+4       Nantes  23031.59
+4       Nashua  119552.05
+4       New Bedford     113557.51
+4       New Haven       42498.76
+4       North Sydney    41791.95
+4       Oslo    45078.76
+4       Paris   89436.6
+4       Pasadena        4512.48
+4       Philadelphia    116503.07
+4       Reggio Emilia   44669.74
+4       Reims   48895.59
+4       Salzburg        45001.11
+4       San Francisco   151459.48
+4       San Rafael      163983.65
+4       Sevilla 54723.62
+4       Singapore       77809.37
+4       South Brisbane  27098.8
+4       Stavern 61897.19
+4       Toulouse        38098.24
+4       Vancouver       75238.92
+4       Versailles      59074.9
+4       White Plains    85555.99
+--------------------------------------------------------------
+
+Qh. Find a month for each year in which maximum number of quantities were sold
+
+Ans: select year_id , month_id , sum(quantityordered) as quant from sales_order_orc group by year_id,month_id order by year_id,month_id,quant desc ;
+
+output 
+---------------------------------------------------------------------
+2003    1       1357
+2003    2       1449
+2003    3       1755
+2003    4       1993
+2003    5       2017
+2003    6       1649
+2003    7       1725
+2003    8       1974
+2003    9       2510
+2003    10      5515
+2003    11      10179
+2003    12      2489
+2004    1       3245
+2004    2       3061
+2004    3       1978
+2004    4       2077
+2004    5       2618
+2004    6       2971
+2004    7       3174
+2004    8       4564
+2004    9       3171
+2004    10      5483
+2004    11      10678
+2004    12      3804
+2005    1       3395
+2005    2       3393
+2005    3       3852
+2005    4       2634
+2005    5       4357
+------------------------------------------------------------------------
